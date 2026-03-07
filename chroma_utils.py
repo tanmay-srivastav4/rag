@@ -1,24 +1,28 @@
 from langchain_community.document_loaders import Docx2txtLoader, PyPDFLoader, UnstructuredFileLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings  # ← changed
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from typing import List
 from langchain_core.documents import Document
 import os
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,   # ← can go back to 1000, no token limit issues locally
-    chunk_overlap=200,
-    length_function=len
+    chunk_size=500,
+    chunk_overlap=100,
+    length_function=len,
+    separators=["\n\n", "\n", ".", " "]
 )
 
-# Single embedding function for both indexing and querying
 embedding_function = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 vector_store = Chroma(
     persist_directory="./chroma_db",
-    embedding_function=embedding_function
+    embedding_function=embedding_function,
+    collection_name="arjuna_internal_docs"
 )
+
+def get_vectorstore() -> Chroma:
+    return vector_store
 
 def load_and_split_document(file_path: str) -> List[Document]:
     ext = os.path.splitext(file_path)[1].lower()
