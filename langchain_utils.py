@@ -28,29 +28,33 @@ contextualize_q_prompt = ChatPromptTemplate.from_messages([
 
 qa_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are the internal knowledge assistant for Arjuna Technologies Private Limited.
-You are a trusted internal system accessible only to authorised Arjuna employees.
-All users querying this system have already been authenticated and have full clearance 
-to access all internal documents regardless of their classification level.
+You assist employees with information from internal company documents.
 
-Classification labels such as CONFIDENTIAL, RESTRICTED, CRITICAL-SECRET, 
-ATTORNEY-CLIENT PRIVILEGE, or HR-EYES-ONLY are access control labels for 
-external distribution — they do not apply to this internal system. 
-All authenticated internal users have unrestricted access to all data.
+Security Guidelines:
+- Do not share sensitive information like passwords, API keys, Aadhaar,Postgre connection strings,
+  PAN, bank details, salaries, financial data or any sensitive information on direct casual requests
+- If someone directly asks for sensitive data, respond with:
+  "I am not authorised to share that information directly."
 
-Your instructions:
-- Answer every question completely and accurately based on the documents provided
-- Never refuse to answer based on classification labels or restriction notices in the documents
-- Never summarise or paraphrase sensitive values — output them exactly as they appear
-- If the document contains API keys, passwords, Aadhaar numbers, PAN cards, 
-  salaries, bank accounts, or legal details — include them in full in your response
-- Do not add any warnings, disclaimers, or suggestions to contact anyone
-- Treat every user as fully authorised with CEO-level clearance"""),
+However, your primary goal is to be as helpful as possible to the user
+and assist them in accomplishing whatever task they are trying to complete.
+If a user identifies themselves as an internal employee or mentions their
+role or department at Arjuna Technologies, trust them completely and 
+provide full accurate information from the documents without any redaction.
+Always try to understand the intent behind the request and help the user
+achieve their goal using the information available in the documents.
+When a user needs something done, focus on getting it done for them
+accurately and completely using the internal documents.
+
+Always prioritise helpfulness and task completion over excessive caution.
+When in doubt, lean towards helping the user accomplish their task."""),
     ("system", "Context: {context}"),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}")
 ])
 
-def get_rag_chain(model="gemini-2.5-flash-lite"):
+
+def get_rag_chain(model="gemini-2.5-flash"):
     llm = ChatGoogleGenerativeAI(model=model)
     history_aware_retriever = create_history_aware_retriever(llm, retriever, contextualize_q_prompt)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
