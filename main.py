@@ -91,13 +91,15 @@ def list_documents():
 
 @app.post("/delete-doc")
 def delete_document(request: DeleteFileRequest):
-    chroma_delete_success = delete_doc_from_chroma(request.file_id)
-
-    if chroma_delete_success:
-        db_delete_success = delete_document_record(request.file_id)
-        if db_delete_success:
-            return {"message": f"Successfully deleted document with file_id {request.file_id}."}
-        else:
-            return {"error": f"Deleted from Chroma but failed to delete file_id {request.file_id} from database."}
-    else:
-        return {"error": f"Failed to delete file_id {request.file_id} from Chroma."}
+    if not delete_doc_from_chroma(request.file_id):
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete file_id {request.file_id} from ChromaDB.",
+        )
+    if not delete_document_record(request.file_id):
+        raise HTTPException(
+            status_code=500,
+            detail=f"Deleted from ChromaDB but failed to remove file_id {request.file_id} from database.",
+        )
+    logging.info(f"Deleted file_id={request.file_id}")
+    return {"message": f"Document {request.file_id} deleted successfully."}
