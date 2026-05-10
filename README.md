@@ -1,31 +1,33 @@
-# Arjuna Knowledge Assistant — RAG Chatbot
+# Arjuna Knowledge Assistant
 
-Internal RAG (Retrieval-Augmented Generation) chatbot for Arjuna Technologies.  
-Employees can ask natural-language questions about company documents; the system retrieves relevant passages and answers via Gemini.
+Internal Retrieval-Augmented Generation (RAG) chatbot for Arjuna Technologies. Employees can ask natural-language questions about company documents, and the app retrieves relevant passages before answering with Gemini.
 
----
+## Project Structure
 
-## Architecture
+```text
+backend/
+  main.py               FastAPI app and API routes
+  langchain_utils.py    RAG chain and prompt setup
+  chroma_utils.py       ChromaDB loading, indexing, and deletion helpers
+  db_utils.py           SQLite chat history and document metadata helpers
+  pydantic_models.py    Request and response models
 
+frontend/
+  streamlit_app.py      Streamlit UI entry point
+  sidebar.py            Model selector and document management UI
+  chat_interface.py     Chat history and input UI
+  api_utils.py          HTTP client helpers for the backend
+
+scripts/
+  ingest.py             Bulk-ingests PDFs from data/ into ChromaDB
+
+data/                   Source documents for local ingestion
+main.py                 Compatibility entry point for uvicorn
+streamlit_app.py        Compatibility entry point for Streamlit
+ingest.py               Compatibility entry point for ingestion
 ```
-streamlit_app.py        ← UI entry point
-  sidebar.py            ← Model selector + document management (upload / list / delete)
-  chat_interface.py     ← Chat history + input box
 
-api_utils.py            ← HTTP calls to the FastAPI backend
-
-main.py                 ← FastAPI backend (chat, upload, list, delete endpoints)
-  langchain_utils.py    ← RAG chain (history-aware retriever + QA chain)
-  chroma_utils.py       ← ChromaDB helpers (single source of config truth)
-  db_utils.py           ← SQLite helpers (chat history + document metadata)
-  pydantic_models.py    ← Shared request/response schemas
-
-ingest.py               ← One-off bulk ingest of ./data/*.pdf into ChromaDB
-```
-
----
-
-## Quick start
+## Quick Start
 
 ### 1. Install dependencies
 
@@ -39,49 +41,39 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env and add your GOOGLE_API_KEY
+# Add your GOOGLE_API_KEY to .env
 ```
 
-### 3. Ingest documents (first time, or when docs change)
+### 3. Ingest documents
 
-Place PDFs in `./data/` then run:
+Place PDFs in `data/`, then run:
 
 ```bash
 python ingest.py
 ```
 
-### 4. Start the FastAPI backend
+### 4. Start the backend
 
 ```bash
 uvicorn main:app --reload
 ```
 
-### 5. Start the Streamlit frontend
+### 5. Start the frontend
 
 ```bash
 streamlit run streamlit_app.py
 ```
 
-Open http://localhost:8501 in your browser.
+Open `http://localhost:8501` in your browser.
 
----
+## Supported Files
 
-## Supported file types
+The sidebar upload supports PDF, DOCX, and HTML files. Bulk ingestion supports PDFs from `data/`.
 
-Upload via the sidebar (PDF, DOCX, HTML) or bulk-ingest PDFs via `ingest.py`.
+## Runtime Files
 
----
+The app creates local runtime files on first use:
 
-## Security
-
-Queries containing keywords related to credentials, PII, salary, or financial data are blocked at two layers:
-1. **Backend keyword filter** (`main.py`) — fast, no LLM call needed.
-2. **System prompt policy** (`langchain_utils.py`) — the LLM is instructed never to reveal sensitive data.
-
----
-
-## Notes
-
-- The SQLite database (`rag_app.db`) stores chat history and document metadata.
-- ChromaDB persists embeddings in `./chroma_db/`.
-- Both directories are created automatically on first run.
+- `rag_app.db` for chat history and document metadata
+- `chroma_db/` for persisted vector embeddings
+- `app.log` for backend logs
