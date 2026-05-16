@@ -1,6 +1,6 @@
-# Arjuna Knowledge Assistant
+# RAG Chatbot
 
-Internal Retrieval-Augmented Generation (RAG) chatbot for Arjuna Technologies. Employees can ask natural-language questions about company documents, and the app retrieves relevant passages before answering with Gemini.
+Internal Retrieval-Augmented Generation (RAG) chatbot for an enterprise. Employees can ask natural-language questions about company documents, and the app retrieves relevant passages before answering with Gemini.
 
 ## Project Structure
 
